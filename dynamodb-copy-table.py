@@ -8,13 +8,9 @@ from time import sleep
 import sys
 import os
 
-if len(sys.argv) != 3:
-    print("Usage: %s <source_table_name> <destination_table_name>"% sys.argv[0])
-    sys.exit(1)
-
-src_table = sys.argv[1]
-dst_table = sys.argv[2]
-region = os.getenv('AWS_DEFAULT_REGION', 'us-west-2')
+src_table = "Status-3f7ecuslqrecfeb7boxajula4m-master"
+dst_table = "Status-Scratchpad"
+region = os.getenv('AWS_DEFAULT_REGION', 'eu-west-1')
 
 # host = 'dynamodb.%s.amazonaws.com' % region
 # ddbc = DynamoDBConnection(is_secure=False, region=region, host=host)
@@ -27,7 +23,7 @@ try:
     logs = Table(src_table, connection=ddbc)
     table_struct = logs.describe()
 except JSONResponseError:
-    print("Table %s does not exist" % src_table) 
+    print("Table %s does not exist" % src_table)
     sys.exit(1)
 
 print("*** Reading key schema from %s table" % src_table)
@@ -46,11 +42,11 @@ for schema in src['KeySchema']:
 table_struct = None
 try:
     new_logs = Table(dst_table,
-                    connection=ddbc,
-                    schema=[HashKey(hash_key),
-                            RangeKey(range_key),
-                            ]
-                    )
+                     connection=ddbc,
+                     schema=[HashKey(hash_key),
+                             RangeKey(range_key),
+                             ]
+                     )
 
     table_struct = new_logs.describe()
     if 'DISABLE_CREATION' in os.environ:
@@ -70,7 +66,6 @@ except JSONResponseError:
     sleep(5)
     while ddbc.describe_table(dst_table)['Table']['TableStatus'] != 'ACTIVE':
         sleep(3)
-    
 
 if 'DISABLE_DATACOPY' in os.environ:
     print("Copying of data from source table is disabled. Exiting...")
